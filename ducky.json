@@ -1,0 +1,24 @@
+{
+  "key":4,
+  "updateAuthority":"EsnAXudEr2JiSNPfhdQrKfuKB53LFPmqHU1uG1yZo7iQ",
+  "mint":"97TgtAnya3WC6fDRhzeeV7B5ngLnemP6YFjxnxYxY8ng",
+  "data":{
+    "name":"DUCKY",
+    "symbol":"DUCKY",
+    "uri":"https://gateway.pinata.cloud/ipfs/QmXhzi2NisKEb8A9RHPDGHiBAnJa7bTseuuU4n1ctN53fd",
+    "sellerFeeBasisPoints":0,
+    "creators":[
+      {
+      "address":"EsnAXudEr2JiSNPfhdQrKfuKB53LFPmqHU1uG1yZo7iQ",
+      "verified":1,
+      "share":100
+      }
+    ]
+  },
+  "primarySaleHappened": 0,
+  "isMutable":1,
+  "editionNonce":253,
+  "tokenStandard":2,
+  "collection":null,
+  "uses":null
+}
