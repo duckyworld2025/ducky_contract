@@ -54,7 +54,6 @@ pub fn process_instruction(
     instruction_data: &[u8],
 ) -> ProgramResult {
 
-    // ======== Code add start ========
     let account_info_iter = &mut accounts.iter();
 
     let _account1 = next_account_info(account_info_iter)?; // 1. 토큰을 보낼 SPL 토큰 계정
@@ -65,7 +64,6 @@ pub fn process_instruction(
         msg!("Invalid token program passed");
         return Err(ProgramError::IncorrectProgramId);
     }
-    // ======== Code add end ========
 
     let instruction = TokenInstruction::unpack(instruction_data)?;
 
@@ -96,15 +94,12 @@ pub fn mint_tokens(
     let mint_authority = next_account_info(account_info_iter)?;
     let spl_token_program = next_account_info(account_info_iter)?; // 4. SPL 토큰 프로그램 ID
 
-    // ======== Code add start ========
-
     // SPL Token program ID Check.
     if spl_token_program.key != &spl_token::id()
     {
         msg!("Invalid token program passed");
         return Err(ProgramError::IncorrectProgramId);
     }
-    // ======== Code add end ========
 
     // 민트 권한을 가진 계정이 트랜잭션에 서명했는지 확인합니다.
     if !mint_authority.is_signer {
@@ -155,14 +150,14 @@ pub fn transfer_tokens(
     let _mint_account = next_account_info(account_info_iter)?; // 4. 토큰 민트 (검증용)
     let spl_token_program = next_account_info(account_info_iter)?; // 5. SPL 토큰 프로그램 ID
 
-    // ======== Code add start ========
+
     // SPL Token program ID Check.
     if spl_token_program.key != &spl_token::id()
     {
         msg!("Invalid token program ID or CPI");
         return Err(ProgramError::IncorrectProgramId);
     }
-    // ======== Code add end ========
+
 
     // 전송 권한 확인: 소유자 계정이 서명했는지 확인합니다.
     if !owner_account.is_signer {
@@ -217,8 +212,7 @@ mod tests {
             _ => panic!("Expected MintTokens instruction"),
         }
     }
-
-    // ======== Code add start ========
+    
     #[test]
     fn test_unpack_transfer_tokens() {
         let amount: u64 = 500;
@@ -235,5 +229,4 @@ mod tests {
             _ => panic!("Expected TransferTokens instruction"),
         }
     }
-    // ======== Code add end ========
 }
