@@ -16,7 +16,7 @@ entrypoint!(process_instruction);
 pub enum TokenInstruction {
     //토큰을 민트하여 사용자 계정에 발행합니다.
     MintTokens { amount: u64 },
-    
+
     //토큰을 한 계정에서 다른 계정으로 전송합니다.
     TransferTokens { amount: u64 },
 }
@@ -47,12 +47,26 @@ impl TokenInstruction {
 }
 
 
-// 메인 인스트럭션 처리 함수 
+// 메인 인스트럭션 처리 함수
 pub fn process_instruction(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
+
+    // ======== Code add start ========
+    let account_info_iter = &mut accounts.iter();
+
+    let _account1 = next_account_info(account_info_iter)?; // 1. 토큰을 보낼 SPL 토큰 계정
+    let _account2 = next_account_info(account_info_iter)?; // 2. 토큰을 받을 SPL 토큰 계정
+    let owner_account = next_account_info(account_info_iter)?; // 3. 소스 계정의 소유자 (서명자)
+    if owner_account.owner != &spl_token::id()
+    {
+        msg!("Invalid token program passed");
+        return Err(ProgramError::IncorrectProgramId);
+    }
+    // ======== Code add end ========
+
     let instruction = TokenInstruction::unpack(instruction_data)?;
 
     match instruction {
@@ -79,17 +93,26 @@ pub fn mint_tokens(
     let mint_account = next_account_info(account_info_iter)?; // 1. 토큰 민트 (Mint) 계정
     let token_account = next_account_info(account_info_iter)?; // 2. 토큰을 받을 SPL 토큰 계정
     // 3. 민트 권한을 가진 계정 (이 계정이 트랜잭션 서명을 제공해야 합니다)
-    let mint_authority = next_account_info(account_info_iter)?; 
+    let mint_authority = next_account_info(account_info_iter)?;
     let spl_token_program = next_account_info(account_info_iter)?; // 4. SPL 토큰 프로그램 ID
 
-    
+    // ======== Code add start ========
+
+    // SPL Token program ID Check.
+    if spl_token_program.key != &spl_token::id()
+    {
+        msg!("Invalid token program passed");
+        return Err(ProgramError::IncorrectProgramId);
+    }
+    // ======== Code add end ========
+
     // 민트 권한을 가진 계정이 트랜잭션에 서명했는지 확인합니다.
     if !mint_authority.is_signer {
         msg!("Mint Authority must be a signer for this transaction.");
         return Err(ProgramError::MissingRequiredSignature);
     }
     // -----------------------------------------------------------
-    
+
     // 1. SPL `mint_to` 인스트럭션 생성
     let mint_instruction = mint_to(
         spl_token_program.key,
@@ -131,6 +154,15 @@ pub fn transfer_tokens(
     let owner_account = next_account_info(account_info_iter)?; // 3. 소스 계정의 소유자 (서명자)
     let _mint_account = next_account_info(account_info_iter)?; // 4. 토큰 민트 (검증용)
     let spl_token_program = next_account_info(account_info_iter)?; // 5. SPL 토큰 프로그램 ID
+
+    // ======== Code add start ========
+    // SPL Token program ID Check.
+    if spl_token_program.key != &spl_token::id()
+    {
+        msg!("Invalid token program ID or CPI");
+        return Err(ProgramError::IncorrectProgramId);
+    }
+    // ======== Code add end ========
 
     // 전송 권한 확인: 소유자 계정이 서명했는지 확인합니다.
     if !owner_account.is_signer {
@@ -177,7 +209,7 @@ mod tests {
         instruction_data.extend_from_slice(&amount.to_le_bytes());
 
         let instruction = TokenInstruction::unpack(&instruction_data).unwrap();
-        
+
         match instruction {
             TokenInstruction::MintTokens { amount: unpacked_amount } => {
                 assert_eq!(unpacked_amount, amount);
@@ -185,4 +217,23 @@ mod tests {
             _ => panic!("Expected MintTokens instruction"),
         }
     }
+
+    // ======== Code add start ========
+    #[test]
+    fn test_unpack_transfer_tokens() {
+        let amount: u64 = 500;
+        let mut instruction_data = Vec::new();
+        instruction_data.push(1); // Tag 1: TransferTokens
+        instruction_data.extend_from_slice(&amount.to_le_bytes());
+
+        let instruction = TokenInstruction::unpack(&instruction_data).unwrap();
+
+        match instruction {
+            TokenInstruction::TransferTokens { amount: unpacked_amount } => {
+                assert_eq!(unpacked_amount, amount);
+            }
+            _ => panic!("Expected TransferTokens instruction"),
+        }
+    }
+    // ======== Code add end ========
 }
